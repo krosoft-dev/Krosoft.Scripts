@@ -5,14 +5,26 @@ Set-Alias KGV GitVersion
 
 function GitClean {
     Write-Host "=========================================="
-    Write-Host "Clean branch of Repository"
+    Write-Host "Clean repository"
     Write-Host "=========================================="
     $path = Get-Location
     Write-Host "Path : " $path
     Write-Host "=========================================="
     git pull
     git fetch origin --prune
-    git branch -vv | where { $_ -match '\[origin/.*: gone\]' } | foreach { git branch -D ($_.split(" ", [StringSplitOptions]'RemoveEmptyEntries')[0]) }
+    git branch -vv | Where-Object { $_ -match '\[origin/.*: gone\]' } | ForEach-Object { git branch -D ($_.split(" ", [StringSplitOptions]'RemoveEmptyEntries')[0]) }
     Write-Host  
 }
 Set-Alias KGC GitClean
+
+function GitPull {
+    Write-Host "=========================================="
+    Write-Host "Pull repository"
+    Write-Host "=========================================="
+    $path = Get-Location
+    Write-Host "Path : " $path
+    Write-Host "=========================================="
+    git pull
+    Write-Host        
+}
+Set-Alias KGP GitPull
