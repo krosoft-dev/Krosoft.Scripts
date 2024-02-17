@@ -48,7 +48,7 @@ function GitBranchesProjet($configuration ) {
     Write-Host
     Write-Host 
 }
-function GitPushProjet($configuration ) {    
+function GitPushProjet($configuration) {    
     Write-Host "Starting: GitPushProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
     $path = Get-Location
@@ -79,6 +79,43 @@ function GitCommitPushProjet($configuration, $commitName) {
         Set-Location $path  
     }   
     Write-Host "Finishing: GitCommitPushProjet" -ForegroundColor Green
+    Write-Host
+    Write-Host 
+}
+
+ 
+function GitCleanProjet($configuration) {    
+    Write-Host "Starting: GitCleanProjet" -ForegroundColor Green
+    Write-Host "=============================================================================="    
+    $path = Get-Location
+    Write-Host "ProjectName            : " $configuration.projectName    
+    Write-Host "=============================================================================="  
+    foreach ($repo in $configuration.repositories) {      
+        $path = Get-Location 
+        Set-Location $repo.name
+        GitClean  
+        Set-Location $path  
+    }   
+    Write-Host "Finishing: GitCleanProjet" -ForegroundColor Green
+    Write-Host
+    Write-Host 
+}
+
+ 
+ 
+function GitRevertProjet($configuration) {    
+    Write-Host "Starting: GitRevertProjet" -ForegroundColor Green
+    Write-Host "=============================================================================="    
+    $path = Get-Location
+    Write-Host "ProjectName            : " $configuration.projectName    
+    Write-Host "=============================================================================="  
+    foreach ($repo in $configuration.repositories) {      
+        $path = Get-Location 
+        Set-Location $repo.name
+        GitRevert  
+        Set-Location $path  
+    }   
+    Write-Host "Finishing: GitRevertProjet" -ForegroundColor Green
     Write-Host
     Write-Host 
 }

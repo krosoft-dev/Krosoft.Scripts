@@ -85,3 +85,29 @@ function GitCommitPush($commitName) {
     Write-Host
     Write-Host 
 } 
+
+
+
+
+
+function GitRevert() {    
+    Write-Host "Starting: GitRevert" -ForegroundColor Green
+    Write-Host "=============================================================================="    
+    $path = Get-Location
+    Write-Host "Path            : " $path 
+    Write-Host "=============================================================================="  
+    git clean -fd
+    git reset --hard
+    git checkout 
+    Write-Host "Finishing: GitRevert" -ForegroundColor Green
+    Write-Host
+    Write-Host 
+} 
+Set-Alias KGR GitRevert
+
+
+
+
+
+
+ 

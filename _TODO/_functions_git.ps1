@@ -94,57 +94,10 @@ function GitConfigProjet() {
 
 
 
-function GitClean($repositoryName) {    
-    $path = Get-Location
-    Set-Location $repositoryName  
-    $repositoryPath = Get-Location
-    Write-Host "=========================================="
-    Write-Host "Clean branch of repository: "$repositoryName
-    Write-Host "Path : " $repositoryPath
-    Write-Host "=========================================="
-    git fetch origin --prune
-    git branch -vv | where { $_ -match '\[origin/.*: gone\]' } | foreach { git branch -D ($_.split(" ", [StringSplitOptions]'RemoveEmptyEntries')[0]) }
-    Set-Location $path  
-} 
+ 
+ 
 
-
-function GitCleanProjet() {     
-     
-    Write-Host "=========================================="
-    Write-Host "GitCleanProjet : "$global:projet
-    Write-Host "==========================================" 
-    
-    foreach ($repo in $global:repositories) {        
-        GitClean $repo.name 
-    }   
-}
-
-function GitRevert($repositoryName) {    
-    $path = Get-Location
-    Set-Location $repositoryName  
-    $repositoryPath = Get-Location
-    Write-Host "=========================================="
-    Write-Host "Clean untracked changes of repository: "$repositoryName
-    Write-Host "Path : " $repositoryPath
-    Write-Host "=========================================="
-    git clean -fd
-    git reset --hard
-    git checkout
-    Set-Location $path  
-} 
-
-
-function GitRevertProjet() {     
-     
-    Write-Host "=========================================="
-    Write-Host "GitRevertProjet : "$global:projet
-    Write-Host "==========================================" 
-    
-    foreach ($repo in $global:repositories) {        
-        GitRevert $repo.name 
-    }   
-}
-
+  
 function GitRename($repositoryName, $old_name, $new_name) {    
     $path = Get-Location
     Set-Location $repositoryName  
