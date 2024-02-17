@@ -2,14 +2,12 @@ function GitCloneProjet($configuration) {
     Write-Host "Starting: GitCloneProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
     $path = Get-Location
+    Write-Host "Path              : " $path 
     Write-Host "ProjectName              : " $configuration.projectName 
     Write-Host "=============================================================================="  
-    foreach ($repo in $configuration.repositories) {             
-        $path = Get-Location 
-        Set-Location $repo.name      
+    foreach ($repo in $configuration.repositories) {  
         $repositoryUrl = "$($configuration.azureDevops.urlGit)/$($configuration.projectName)/_git/$($repo.name)"
-        GitClone $repositoryUrl
-        Set-Location $path  
+        GitClone $repositoryUrl       
     }   
     Write-Host "Finishing: GitCloneProjet" -ForegroundColor Green
     Write-Host

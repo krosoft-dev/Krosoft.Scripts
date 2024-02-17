@@ -35,14 +35,16 @@ function GitPull($branch) {
 Set-Alias KGP GitPull
 
 function GitClone($repositoryUrl) {
-    Write-Host "=========================================="
-    Write-Host "Clone repository : "$repositoryUrl
-    Write-Host "=========================================="
+    Write-Host "Starting: GitClone" -ForegroundColor Green
+    Write-Host "=============================================================================="    
     $path = Get-Location
-    Write-Host "Path : " $path
-    Write-Host "=========================================="
+    Write-Host "Path                     : " $path
+    Write-Host "RepositoryUrl            : " $repositoryUrl
+    Write-Host "=============================================================================="  
     git clone $repositoryUrl
-    Write-Host        
+    Write-Host "Finishing: GitClone" -ForegroundColor Green
+    Write-Host
+    Write-Host 
 }
 Set-Alias KGClo GitClone
 

@@ -125,7 +125,7 @@ function GitRenameProjet() {
     $new_name = "develop"
 
     foreach ($repo in $global:repositories) {        
-        GitRevert $repo.name $old_name $new_name
+        GitRename $repo.name $old_name $new_name
     }   
 }
 
