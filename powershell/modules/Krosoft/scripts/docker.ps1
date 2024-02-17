@@ -1,7 +1,7 @@
 function DockerUp($configuration, $folder) {   
     Write-Host "Starting: DockerUp" -ForegroundColor Green
     Write-Host "=============================================================================="
-    Write-Host "Projet         : "$configuration.Projet
+    Write-Host "Projet         : "$configuration.projectName
     Write-Host "Folder         : "$folder
     Write-Host "=============================================================================="
     docker-compose --compatibility -f "$($configuration.dockerComposeFolder)\$folder\docker-compose.yml" -f "$($configuration.dockerComposeFolder)\$folder\docker-compose.override.yml" up -d 
@@ -14,7 +14,7 @@ function DockerUp($configuration, $folder) {
 function DockerDown($configuration, $folder) {   
     Write-Host "Starting: DockerDown" -ForegroundColor Green
     Write-Host "=============================================================================="
-    Write-Host "Projet         : "$configuration.Projet
+    Write-Host "Projet         : "$configuration.projectName
     Write-Host "Folder         : "$folder
     Write-Host "=============================================================================="
     docker-compose --compatibility -f "$($configuration.dockerComposeFolder)\$folder\docker-compose.yml" -f "$($configuration.dockerComposeFolder)\$folder\docker-compose.override.yml" down

@@ -11,44 +11,295 @@
 
 
 
-# function AzDevOpsRepositories() { 
-#     Write-Host "=========================================="
-#     Write-Host "AzDevOpsRepositories : $global:projet"  
-#     Write-Host "==========================================" 
-#     $organization = $global:azureDevops.organization
-#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $global:azureDevops.token)))
-#     $Url = "https://dev.azure.com/$organization/$global:projet/_apis/git/repositories?api-version=6.0-preview.1"
-       
-#     Write-Host "Performing request on '$Url'."
-     
-#     $response = Invoke-RestMethod `
-#         -Uri $Url `
-#         -Method "Get" `
-#         -ContentType "application/json" `
-#         -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } `
+function AzDevOpsRepositories($configuration) {  
+    Write-Host "Starting: AzDevOpsRepositories" -ForegroundColor Green
+    Write-Host "=============================================================================="    
+    $organization = $configuration.azureDevops.organization   
+    Write-Host "Organization         : " $organization  
+    Write-Host "=============================================================================="  
+    $organization = $configuration.azureDevops.organization   
+    $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
+    $Url = "https://dev.azure.com/$organization/$($configuration.projectName)/_apis/git/repositories?api-version=6.0-preview.1"
+      
+    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
     
-#     $repositories = $response.value | Select-Object -Property id, name, defaultBranch 
-#     $repositories    
-# }
+    $response = Invoke-RestMethod `
+        -Uri $Url `
+        -Method "GET" `
+        -ContentType "application/json" `
+        -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } 
+   
+    $repositories = $response.value | Select-Object -Property id, name, defaultBranch 
+    $repositories | Format-Table 
 
-# function AzDevOpsRepositoriesSetDefault($defaultBranch) { 
-#     Write-Host "=========================================="
-#     Write-Host "AzDevOpsRepositoriesSetDefault : $global:projet"  
-#     Write-Host "==========================================" 
-#     Write-Host "Default branch : $defaultBranch"  
+    Write-Host "Finishing: AzDevOpsRepositories" -ForegroundColor Green
+    Write-Host
+    Write-Host 
+}
 
-#     AzDevOpsInitCli $global:azureDevops.token $global:azureDevops.url $global:projet
-       
-#     foreach ($p in  $global:repositories) {
-#         Write-Host "==========================================" 
-#         Write-Host "Setting default branch "$p.Name 
-#         $response = az repos update --org $global:azureDevops.url --project $global:projet --repository $p.Id --default-branch $defaultBranch 
-#         $t = $response | ConvertFrom-Json
-#         Write-Host $t.name "is OK !"
-#         Write-Host "=================================================="
-#         Write-Host
-#     }
-# }
+function AzDevOpsProjects($configuration) {  
+    Write-Host "Starting: AzDevOpsProjects" -ForegroundColor Green
+    Write-Host "=============================================================================="    
+    $organization = $configuration.azureDevops.organization   
+    Write-Host "Organization         : " $organization  
+    Write-Host "=============================================================================="  
+    $organization = $configuration.azureDevops.organization   
+    $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
+    $Url = "https://dev.azure.com/$organization/_apis/projects?api-version=6.0-preview.1"
+      
+    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
+    
+    $response = Invoke-RestMethod `
+        -Uri $Url `
+        -Method "GET" `
+        -ContentType "application/json" `
+        -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } 
+   
+    $projects = $response.value | Select-Object -Property id, name
+    $projects | Format-Table 
+
+    Write-Host "Finishing: AzDevOpsProjects" -ForegroundColor Green
+    Write-Host
+    Write-Host 
+}
+
+function AzDevOpsRepositoriesCreate($configuration, $repositoryName) {      
+    Write-Host "Starting: AzDevOpsRepositoriesCreate" -ForegroundColor Green
+    Write-Host "=============================================================================="    
+    $organization = $configuration.azureDevops.organization   
+    Write-Host "Organization           : " $organization  
+    Write-Host "RepositoryName         : " $repositoryName  
+    Write-Host "=============================================================================="  
+    $organization = $configuration.azureDevops.organization   
+    $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
+    $Url = "https://dev.azure.com/$organization/$($configuration.projectName)/_apis/git/repositories?api-version=6.0-preview.1"
+    
+    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
+          
+    $body = @{
+        name    = $repositoryName              
+        project = @{
+            id = "$($configuration.azureDevops.projectId)"
+          
+        }
+        
+    }
+    
+    $json = $body | ConvertTo-Json
+
+    Write-Host "=============================================================================="  
+    $json
+    Write-Host "=============================================================================="  
+
+    try {
+        $response = Invoke-RestMethod `
+            -Uri $Url `
+            -Method "POST" `
+            -ContentType "application/json" `
+            -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } `
+            -Body $json 
+        $response
+    }
+    catch {
+        Write-Host -fore blue "Code : " $_.Exception.Response.StatusCode.value__ 
+        Write-Host -fore blue "Description : " $_.Exception.Response.StatusDescription
+        $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+        $reader.BaseStream.Position = 0
+        $reader.DiscardBufferedData()
+        $err = $reader.ReadToEnd() | ConvertFrom-Json
+        Write-Host -fore blue "Error : " $err.message 
+    }
+
+    Write-Host "Finishing: AzDevOpsRepositoriesCreate" -ForegroundColor Green
+    Write-Host
+    Write-Host    
+}
+
+
+
+function AzDevOpsRepositoriesCreateBranch($configuration, $repositoryId, $branchName) {     
+    Write-Host "Starting: AzDevOpsRepositoriesCreateBranch" -ForegroundColor Green
+    Write-Host "=============================================================================="    
+    $organization = $configuration.azureDevops.organization   
+    Write-Host "Organization           : " $organization  
+    Write-Host "RepositoryId           : " $repositoryId   
+    Write-Host "BranchName             : " $branchName  
+    Write-Host "=============================================================================="  
+    $organization = $configuration.azureDevops.organization   
+    $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
+    $Url = "https://dev.azure.com/$organization/$($configuration.projectName)/_apis/git/repositories/$($repositoryId)/refs?api-version=6.0" 
+    
+    
+ 
+
+
+
+
+
+
+
+
+
+    # POST https://dev.azure.com/fabrikam/_apis/git/repositories/{repositoryId}/pushes?api-version=7.1-preview.2
+
+    # {
+    #   "refUpdates": [
+    #     {
+    #       "name": "refs/heads/master",
+    #       "oldObjectId": "0000000000000000000000000000000000000000"
+    #     }
+    #   ],
+    #   "commits": [
+    #     {
+    #       "comment": "Initial commit.",
+    #       "changes": [
+    #         {
+    #           "changeType": "add",
+    #           "item": {
+    #             "path": "/readme.md"
+    #           },
+    #           "newContent": {
+    #             "content": "My first file!",
+    #             "contentType": "rawtext"
+    #           }
+    #         }
+    #       ]
+    #     }
+    #   ]
+    # }
+    
+
+
+
+
+
+
+
+ 
+    Write-Host "=============================================================================="  
+
+    $json = ConvertTo-Json @(
+        @{
+            name        = $branchName        
+            oldObjectId = "0000000000000000000000000000000000000000"
+            newObjectId = "ffe9cba521f00d7f60e322845072238635edb451"
+        
+        })
+    
+  
+
+ 
+    $json
+    Write-Host "=============================================================================="  
+
+
+    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+              
+ 
+    try {
+        $response = Invoke-RestMethod `
+            -Uri $Url `
+            -Method "POST" `
+            -ContentType "application/json" `
+            -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } `
+            -Body $json 
+        # Convertir la réponse en format JSON
+        $responseJson = $response | ConvertTo-Json -Depth 100
+
+        # Afficher la réponse
+        Write-Output $responseJson
+    }
+    catch {
+        Write-Host -fore blue "Code : " $_.Exception.Response.StatusCode.value__ 
+        Write-Host -fore blue "Description : " $_.Exception.Response.StatusDescription
+        $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+        $reader.BaseStream.Position = 0
+        $reader.DiscardBufferedData()
+        $err = $reader.ReadToEnd() | ConvertFrom-Json
+        Write-Host -fore blue "Error : " $err.message 
+    }
+    
+    Write-Host "Finishing: AzDevOpsRepositoriesCreateBranch" -ForegroundColor Green
+    Write-Host
+    Write-Host    
+}
+
+ 
+function AzDevOpsRepositoriesSetDefault($configuration, $repositoryId, $defaultBranch) {     
+    Write-Host "Starting: AzDevOpsRepositoriesSetDefault" -ForegroundColor Green
+    Write-Host "=============================================================================="    
+    $organization = $configuration.azureDevops.organization   
+    Write-Host "Organization           : " $organization  
+    Write-Host "RepositoryId           : " $repositoryId   
+    Write-Host "DefaultBranch          : " $defaultBranch  
+    Write-Host "=============================================================================="  
+    $organization = $configuration.azureDevops.organization   
+    $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
+    $Url = "https://dev.azure.com/$organization/$($configuration.projectName)/_apis/git/repositories/$($repositoryId)?api-version=6.0-preview.1"
+        
+    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
+              
+    $body = @{  
+        defaultBranch = $defaultBranch            
+    }
+        
+    $json = $body | ConvertTo-Json
+    
+    Write-Host "=============================================================================="  
+    $json
+    Write-Host "=============================================================================="  
+    
+    try {
+        $response = Invoke-RestMethod `
+            -Uri $Url `
+            -Method "PATCH" `
+            -ContentType "application/json" `
+            -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } `
+            -Body $json 
+        $response
+    }
+    catch {
+        Write-Host -fore blue "Code : " $_.Exception.Response.StatusCode.value__ 
+        Write-Host -fore blue "Description : " $_.Exception.Response.StatusDescription
+        $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+        $reader.BaseStream.Position = 0
+        $reader.DiscardBufferedData()
+        $err = $reader.ReadToEnd() | ConvertFrom-Json
+        Write-Host -fore blue "Error : " $err.message 
+    }
+    
+    Write-Host "Finishing: AzDevOpsRepositoriesSetDefault" -ForegroundColor Green
+    Write-Host
+    Write-Host    
+}
+
+ 
+     
+      
+
+ 
 
 
 # function AzDevOpsPipelines() {
@@ -56,8 +307,8 @@
 #     Write-Host "=========================================="
 #     Write-Host "AzDevOpsPipelines : $global:projet"  
 #     Write-Host "==========================================" 
-#     $organization = $global:azureDevops.organization
-#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $global:azureDevops.token)))
+#     $organization = $configuration.azureDevops.organization
+#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
 #     $Url = "https://dev.azure.com/$organization/$global:projet/_apis/pipelines?api-version=6.0-preview.1"
    
 #     Write-Host "Performing request on '$Url'."
@@ -74,8 +325,8 @@
 
   
 # function AzDevOpsPipelinesCreate($typologie, $repository) {        
-#     $Url = "https://dev.azure.com/$($global:azureDevops.organization)/$global:projet/_apis/pipelines?api-version=6.0-preview.1" 
-#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $global:azureDevops.token)))
+#     $Url = "https://dev.azure.com/$($configuration.azureDevops.organization)/$global:projet/_apis/pipelines?api-version=6.0-preview.1" 
+#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
  
 #     Write-Host "Performing request on '$Url'."    
     
@@ -136,7 +387,7 @@
 #     Write-Host "AzDevOpsPolicies : $global:projet"  
 #     Write-Host "=========================================="     
 
-#     AzDevOpsInitCli $global:azureDevops.token $global:azureDevops.url $global:projet
+#     AzDevOpsInitCli $configuration.azureDevops.token $configuration.azureDevops.url $global:projet
  
 #     Write-Host "========================================================" 
 #     $response = az repos policy list -o table --query "sort_by([].{PolicyId:id,PolicyType:type.displayName, BuildId:settings.buildDefinitionId, BuildName:settings.displayName,Branch:settings.scope[0].refName,RepositoryId:settings.scope[0].repositoryId}, &PolicyType)"
@@ -190,7 +441,7 @@
 #     Write-Host "Repository : $($repository.name)"  
 #     Write-Host "==========================================" 
  
-#     AzDevOpsInitCli $global:azureDevops.token $global:azureDevops.url $global:projet
+#     AzDevOpsInitCli $configuration.azureDevops.token $configuration.azureDevops.url $global:projet
  
 #     $regex = "build-*"
 #     $repositoryId = $($repository.id)
@@ -262,7 +513,7 @@
 #     Write-Host "=========================================="
  
 
-#     $organization = $global:azureDevops.organization
+#     $organization = $configuration.azureDevops.organization
 
 
  
@@ -271,7 +522,7 @@
 
 
   
-#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $global:azureDevops.token)))
+#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
  
 #     Write-Host "Performing request on '$Url'."    
     
@@ -347,7 +598,7 @@
 #     Write-Host "AzDevOpsPipelinesTest : "$global:projet
 #     Write-Host "==========================================" 
     
-#     $organization = $global:azureDevops.organization
+#     $organization = $configuration.azureDevops.organization
 #     $pipelineId = 82 
 
 #     $Url = "https://dev.azure.com/$organization/$global:projet/_apis/pipelines/$pipelineId/runs?api-version=6.0-preview.1"
@@ -364,7 +615,7 @@
 
 
 
-#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $global:azureDevops.token)))
+#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
 
 #     Write-Host "Performing request on '$Url'."    
  
@@ -419,7 +670,7 @@
 #     Write-Host "AzDevOpsPipelinesTest : "$runId
 #     Write-Host "==========================================" 
     
-#      $organization = $global:azureDevops.organization
+#      $organization = $configuration.azureDevops.organization
    
 
 #      $Url = "https://dev.azure.com/$organization/$global:projet/_apis/test/runs/${runId}?api-version=6.0"
@@ -436,7 +687,7 @@
 
 
 
-#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $global:azureDevops.token)))
+#     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
 
 #     Write-Host "Performing request on '$Url'."    
  

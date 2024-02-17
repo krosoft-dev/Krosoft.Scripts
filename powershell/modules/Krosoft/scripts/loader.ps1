@@ -3,20 +3,20 @@ function LoadConfiguration($jsonPath ) {
     Write-Host "=============================================================================="
     Write-Host "Path         : "$jsonPath  
     Write-Host "=============================================================================="  
-    $json = Get-Content -Raw -Path $jsonPath | ConvertFrom-Json  
-    # $obj.projet = $jsonProjet.name
-    # $obj.gitlabId = $jsonProjet.gitlabId
-    # $obj.gitlabName = $jsonProjet.gitlabName
-    # $obj.repositories = $jsonProjet.repositories
-    $configuration = @{
-        Projet                 = $json.name
-        DockerComposeFolder    = $json.dockerComposeFolder
-        Repositories           = $json.repositories
-        Repositories_migration = [array] ($json.repositories | Where-Object { $_.useMigration -eq "true" })
-        Repositories_node      = [array] ($json.repositories | Where-Object { $_.useNode -eq "true" })
+    
+    # Charger le contenu JSON
+    $configuration = Get-Content -Raw -Path $jsonPath | ConvertFrom-Json  
+   
+    # Définir les propriétés comme tableau vide
+    $configuration | Add-Member -MemberType NoteProperty -Name Repositories_migration -Value @()
+    $configuration | Add-Member -MemberType NoteProperty -Name Repositories_node -Value @()
 
-    } 
-    Write-Host "Project : " $configuration.Projet 
+    # Filtrer et ajouter les éléments
+    $configuration.Repositories_migration = [array] ($configuration.repositories | Where-Object { $_.useMigration -eq "true" })
+    $configuration.Repositories_node = [array] ($configuration.repositories | Where-Object { $_.useNode -eq "true" })
+
+
+    Write-Host "ProjectName : " $configuration.projectName 
     Write-Host
     Write-Host "Finishing: LoadConfiguration" -ForegroundColor Green
     Write-Host
@@ -29,8 +29,9 @@ function ShowConfiguration($configuration) {
    
    
     # Write-Host "OrganizationUrl : " $obj.azureDevops.organization 
-    Write-Host "Project : " $configuration.Projet
+    Write-Host "ProjectName : " $configuration.projectName
     Write-Host "DockerComposeFolder : " $configuration.DockerComposeFolder
+    Write-Host "AzureDevops:Organization : " $configuration.azureDevops.organization
 
     Write-Host "Repositories : "($configuration.repositories).length
     Write-Host "Repositories 'Node' : "($configuration.repositories_node).length
@@ -44,7 +45,7 @@ function ShowConfiguration($configuration) {
 
 
    
-   
+ 
    
    
     
