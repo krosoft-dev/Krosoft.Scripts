@@ -73,24 +73,18 @@ function AzDevOpsRepositoriesCreate($configuration, $repositoryName) {
     $organization = $configuration.azureDevops.organization   
     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
     $Url = "https://dev.azure.com/$organization/$($configuration.projectName)/_apis/git/repositories?api-version=6.0-preview.1"
-    
-    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
-          
-    $body = @{
+     
+    $json = @{
         name    = $repositoryName              
         project = @{
             id = "$($configuration.azureDevops.projectId)"
           
         }
         
-    }
-    
-    $json = $body | ConvertTo-Json
-
-    Write-Host "=============================================================================="  
+    } | ConvertTo-Json      
     $json
     Write-Host "=============================================================================="  
-
+    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
     try {
         $response = Invoke-RestMethod `
             -Uri $Url `
@@ -127,96 +121,36 @@ function AzDevOpsRepositoriesCreateBranch($configuration, $repositoryId, $branch
     Write-Host "=============================================================================="  
     $organization = $configuration.azureDevops.organization   
     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
-    $Url = "https://dev.azure.com/$organization/$($configuration.projectName)/_apis/git/repositories/$($repositoryId)/refs?api-version=6.0" 
-    
-    
- 
+    $Url = "https://dev.azure.com/$organization/$($configuration.projectName)/_apis/git/repositories/$($repositoryId)/pushes?api-version=7.1-preview.2"
 
-
-
-
-
-
-
-
-
-    # POST https://dev.azure.com/fabrikam/_apis/git/repositories/{repositoryId}/pushes?api-version=7.1-preview.2
-
-    # {
-    #   "refUpdates": [
-    #     {
-    #       "name": "refs/heads/master",
-    #       "oldObjectId": "0000000000000000000000000000000000000000"
-    #     }
-    #   ],
-    #   "commits": [
-    #     {
-    #       "comment": "Initial commit.",
-    #       "changes": [
-    #         {
-    #           "changeType": "add",
-    #           "item": {
-    #             "path": "/readme.md"
-    #           },
-    #           "newContent": {
-    #             "content": "My first file!",
-    #             "contentType": "rawtext"
-    #           }
-    #         }
-    #       ]
-    #     }
-    #   ]
-    # }
-    
-
-
-
-
-
-
-
- 
-    Write-Host "=============================================================================="  
-
-    $json = ConvertTo-Json @(
-        @{
-            name        = $branchName        
-            oldObjectId = "0000000000000000000000000000000000000000"
-            newObjectId = "ffe9cba521f00d7f60e322845072238635edb451"
-        
-        })
-    
-  
-
- 
+    $json = @{
+        refUpdates = @(
+            @{
+                name        = $branchName   
+                oldObjectId = "0000000000000000000000000000000000000000"  
+            }
+        )
+        commits    = @(
+            @{
+                comment = "Initial commit."
+                changes = @(
+                    @{
+                        changeType = "add"
+                        item       = @{
+                            path = "/readme.md"
+                        }
+                        newContent = @{
+                            content     = "TODO"
+                            contentType = "rawtext"
+                        }
+                    }
+                ) 
+            }
+        )        
+    } | ConvertTo-Json -Depth 5   
     $json
     Write-Host "=============================================================================="  
-
-
-    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-              
+    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan              
  
     try {
         $response = Invoke-RestMethod `
@@ -224,12 +158,10 @@ function AzDevOpsRepositoriesCreateBranch($configuration, $repositoryId, $branch
             -Method "POST" `
             -ContentType "application/json" `
             -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } `
-            -Body $json 
-        # Convertir la réponse en format JSON
-        $responseJson = $response | ConvertTo-Json -Depth 100
+            -Body $json  
 
         # Afficher la réponse
-        Write-Output $responseJson
+        Write-Output $response | Format-Table pushId, date, url
     }
     catch {
         Write-Host -fore blue "Code : " $_.Exception.Response.StatusCode.value__ 
@@ -258,19 +190,14 @@ function AzDevOpsRepositoriesSetDefault($configuration, $repositoryId, $defaultB
     $organization = $configuration.azureDevops.organization   
     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
     $Url = "https://dev.azure.com/$organization/$($configuration.projectName)/_apis/git/repositories/$($repositoryId)?api-version=6.0-preview.1"
-        
-    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
-              
-    $body = @{  
+            
+    $json = @{  
         defaultBranch = $defaultBranch            
-    }
-        
-    $json = $body | ConvertTo-Json
+    } | ConvertTo-Json  
     
-    Write-Host "=============================================================================="  
     $json
     Write-Host "=============================================================================="  
-    
+    Write-Host "Performing request on '$Url'." -ForegroundColor Cyan
     try {
         $response = Invoke-RestMethod `
             -Uri $Url `
@@ -278,7 +205,7 @@ function AzDevOpsRepositoriesSetDefault($configuration, $repositoryId, $defaultB
             -ContentType "application/json" `
             -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } `
             -Body $json 
-        $response
+        $response | ConvertTo-Json  
     }
     catch {
         Write-Host -fore blue "Code : " $_.Exception.Response.StatusCode.value__ 
