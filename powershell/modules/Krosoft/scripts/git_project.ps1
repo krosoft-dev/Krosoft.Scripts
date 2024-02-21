@@ -2,7 +2,7 @@ function GitCloneProjet($configuration) {
     Write-Host "Starting: GitCloneProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
     $path = Get-Location
-    Write-Host "Path              : " $path 
+    Write-Host "Path                     : " $path 
     Write-Host "ProjectName              : " $configuration.projectName 
     Write-Host "=============================================================================="  
     foreach ($repo in $configuration.repositories) {  

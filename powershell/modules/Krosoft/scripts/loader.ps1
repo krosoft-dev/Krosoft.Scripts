@@ -1,11 +1,29 @@
-function LoadConfiguration($jsonPath ) {     
+function LoadJson($jsonPath) {     
+    Write-Host "Starting: LoadJson" -ForegroundColor Green
+    Write-Host "=============================================================================="
+    Write-Host "Path         : "$jsonPath  
+    Write-Host "=============================================================================="  
+    
+    # Charger le contenu JSON
+    $json = Get-Content -Raw -Path $jsonPath | ConvertFrom-Json  
+      
+    Write-Host "json : " $json
+    Write-Host
+    Write-Host "Finishing: LoadJson" -ForegroundColor Green
+    Write-Host
+    Write-Host  
+    return $json
+} 
+
+
+function LoadConfiguration($jsonPath) {     
     Write-Host "Starting: LoadConfiguration" -ForegroundColor Green
     Write-Host "=============================================================================="
     Write-Host "Path         : "$jsonPath  
     Write-Host "=============================================================================="  
     
     # Charger le contenu JSON
-    $configuration = Get-Content -Raw -Path $jsonPath | ConvertFrom-Json  
+    $configuration = LoadJson $jsonPath  
    
     # Définir les propriétés comme tableau vide
     $configuration | Add-Member -MemberType NoteProperty -Name Repositories_migration -Value @()
