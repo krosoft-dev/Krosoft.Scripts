@@ -69,6 +69,7 @@ function AzDevOpsRepositoriesCreate($configuration, $repositoryName) {
     $organization = $configuration.azureDevops.organization   
     Write-Host "Organization           : " $organization  
     Write-Host "RepositoryName         : " $repositoryName  
+    Write-Host "ProjectId              : " $configuration.azureDevops.projectId
     Write-Host "=============================================================================="  
     $organization = $configuration.azureDevops.organization   
     $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $configuration.azureDevops.token)))
