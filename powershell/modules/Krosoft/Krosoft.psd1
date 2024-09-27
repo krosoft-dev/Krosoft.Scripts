@@ -18,7 +18,7 @@ ModuleVersion = '1.0'
 # CompatiblePSEditions = @()
 
 # ID used to uniquely identify this module
-GUID = '122b0fa2-7c4d-41b8-865a-c72c40977496'
+GUID = '6ffab67d-82e7-4a2c-aa6c-c18cc4a84cba'
 
 # Author of this module
 Author = 'Krosoft'

@@ -10,26 +10,7 @@ function AzDevOpsInitCli($token, $url, $project) {
 }
 
 
-
-function AzDevOpsRepositories() { 
-    Write-Host "=========================================="
-    Write-Host "AzDevOpsRepositories : $global:projet"  
-    Write-Host "==========================================" 
-    $organization = $global:azureDevops.organization
-    $tokenBase64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "anything", $global:azureDevops.token)))
-    $Url = "https://dev.azure.com/$organization/$global:projet/_apis/git/repositories?api-version=6.0-preview.1"
-       
-    Write-Host "Performing request on '$Url'."
-     
-    $response = Invoke-RestMethod `
-        -Uri $Url `
-        -Method "Get" `
-        -ContentType "application/json" `
-        -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } `
-    
-    $repositories = $response.value | Select-Object -Property id, name, defaultBranch 
-    $repositories    
-}
+ 
 
 function AzDevOpsRepositoriesSetDefault($defaultBranch) { 
     Write-Host "=========================================="
@@ -412,23 +393,23 @@ function AzDevOpsPipelinesTest() {
 
 
 
- function AzDevOpsTestsRunDelete($runId) {     
+function AzDevOpsTestsRunDelete($runId) {     
      
     Write-Host "=========================================="
     Write-Host "AzDevOpsPipelinesTest : "$global:projet
     Write-Host "AzDevOpsPipelinesTest : "$runId
     Write-Host "==========================================" 
     
-     $organization = $global:azureDevops.organization
+    $organization = $global:azureDevops.organization
    
 
-     $Url = "https://dev.azure.com/$organization/$global:projet/_apis/test/runs/${runId}?api-version=6.0"
+    $Url = "https://dev.azure.com/$organization/$global:projet/_apis/test/runs/${runId}?api-version=6.0"
 
 
  
-      Write-Host "=========================================="
-      Write-Host "Delete run $runId"
-      Write-Host "=========================================="
+    Write-Host "=========================================="
+    Write-Host "Delete run $runId"
+    Write-Host "=========================================="
 
 
 
@@ -442,28 +423,28 @@ function AzDevOpsPipelinesTest() {
  
  
  
-     Write-Host  
-     Write-Host "=====================RESPONSE=====================" 
-     try {
-         $response = Invoke-RestMethod `
-             -Uri $Url `
-             -Method "DELETE" `
-             -ContentType "application/json" `
-             -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } `
+    Write-Host  
+    Write-Host "=====================RESPONSE=====================" 
+    try {
+        $response = Invoke-RestMethod `
+            -Uri $Url `
+            -Method "DELETE" `
+            -ContentType "application/json" `
+            -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } `
              
-         $response
-     }
-     catch {
-         Write-Host -fore blue "Code : " $_.Exception.Response.StatusCode.value__ 
-         Write-Host -fore blue "Description : " $_.Exception.Response.StatusDescription
-         $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
-         $reader.BaseStream.Position = 0
-         $reader.DiscardBufferedData()
-         $err = $reader.ReadToEnd() | ConvertFrom-Json
-         Write-Host -fore blue "Error : " $err.message 
-     }
-     Write-Host "=================================================="
-     Write-Host
+        $response
+    }
+    catch {
+        Write-Host -fore blue "Code : " $_.Exception.Response.StatusCode.value__ 
+        Write-Host -fore blue "Description : " $_.Exception.Response.StatusDescription
+        $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+        $reader.BaseStream.Position = 0
+        $reader.DiscardBufferedData()
+        $err = $reader.ReadToEnd() | ConvertFrom-Json
+        Write-Host -fore blue "Error : " $err.message 
+    }
+    Write-Host "=================================================="
+    Write-Host
 
 
 

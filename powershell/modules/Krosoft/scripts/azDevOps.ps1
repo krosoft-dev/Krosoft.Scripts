@@ -29,12 +29,26 @@ function AzDevOpsRepositories($configuration) {
         -ContentType "application/json" `
         -Headers @{Authorization = ("Basic {0}" -f $tokenBase64) } 
    
-    $repositories = $response.value | Select-Object -Property id, name, defaultBranch 
-    $repositories | Format-Table 
+    $repositories = $response.value | ForEach-Object {
+        [PSCustomObject]@{
+            id            = $_.id
+            name          = $_.name
+            defaultBranch = $_.defaultBranch
+        }
+    }
+    
 
     Write-Host "Finishing: AzDevOpsRepositories" -ForegroundColor Green
     Write-Host
     Write-Host 
+
+
+      
+
+
+    $repositories
+
+
 }
 
 function AzDevOpsProjects($configuration) {  
