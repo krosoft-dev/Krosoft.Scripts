@@ -1,22 +1,40 @@
 function GitCloneProjet($configuration) {    
     Write-Host "Starting: GitCloneProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
-    $path = Get-Location
-    Write-Host "Path                     : " $path 
+    $currentPath = Get-Location
+    $finalPath = Join-Path -Path $currentPath -ChildPath $configuration.projectBasePath    
+    Set-Location $finalPath
+    Write-Host "Current Path             : " $currentPath
+    Write-Host "Final Path               : " $finalPath 
     Write-Host "ProjectName              : " $configuration.projectName 
-    Write-Host "=============================================================================="  
+    Write-Host "Url Git                  : " $configuration.azureDevops.urlGit
+    Write-Host "Use Ssh                  : " $configuration.azureDevops.useSsh
+    Write-Host "=============================================================================="    
+
     foreach ($repo in $configuration.repositories) {  
-        $repositoryUrl = "$($configuration.azureDevops.urlGit)/$($configuration.projectName)/_git/$($repo.name)"
+        if ($($configuration.azureDevops.useSsh) -eq "true") {
+            $repositoryUrl = "$($configuration.azureDevops.urlGit)/$($configuration.projectName)/$($repo.name)"       
+        }
+        else {
+            $repositoryUrl = "$($configuration.azureDevops.urlGit)/$($configuration.projectName)/_git/$($repo.name)"
+        }       
+       
         GitClone $repositoryUrl       
     }   
+ 
+    Set-Location $currentPath
     Write-Host "Finishing: GitCloneProjet" -ForegroundColor Green
     Write-Host
     Write-Host 
 }
+
+
 function GitPullProjet($configuration, $branch) {    
     Write-Host "Starting: GitPullProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
-    $path = Get-Location
+    $currentPath = Get-Location
+    $finalPath = Join-Path -Path $currentPath -ChildPath $configuration.projectBasePath    
+    Set-Location $finalPath
     Write-Host "ProjectName            : " $configuration.projectName
     Write-Host "Branch                 : " $branch
     Write-Host "=============================================================================="  
@@ -26,6 +44,7 @@ function GitPullProjet($configuration, $branch) {
         GitPull $branch 
         Set-Location $path  
     }   
+    Set-Location $currentPath
     Write-Host "Finishing: GitPullProjet" -ForegroundColor Green
     Write-Host
     Write-Host 
@@ -33,7 +52,9 @@ function GitPullProjet($configuration, $branch) {
 function GitBranchesProjet($configuration ) {    
     Write-Host "Starting: GitBranchesProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
-    $path = Get-Location
+    $currentPath = Get-Location
+    $finalPath = Join-Path -Path $currentPath -ChildPath $configuration.projectBasePath    
+    Set-Location $finalPath
     Write-Host "ProjectName            : " $configuration.projectName   
     Write-Host "=============================================================================="  
     foreach ($repo in $configuration.repositories) {      
@@ -41,7 +62,8 @@ function GitBranchesProjet($configuration ) {
         Set-Location $repo.name
         GitBranches  
         Set-Location $path  
-    }   
+    }      
+    Set-Location $currentPath
     Write-Host "Finishing: GitBranchesProjet" -ForegroundColor Green
     Write-Host
     Write-Host 
@@ -49,7 +71,8 @@ function GitBranchesProjet($configuration ) {
 function GitPushProjet($configuration) {    
     Write-Host "Starting: GitPushProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
-    $path = Get-Location
+    $currentPath = Get-Location
+    $finalPath = Join-Path -Path $currentPath -ChildPath $configuration.projectBasePath    
     Write-Host "ProjectName            : " $configuration.projectName   
     Write-Host "=============================================================================="  
     foreach ($repo in $configuration.repositories) {      
@@ -58,6 +81,7 @@ function GitPushProjet($configuration) {
         GitPush  
         Set-Location $path  
     }   
+    Set-Location $currentPath
     Write-Host "Finishing: GitPushProjet" -ForegroundColor Green
     Write-Host
     Write-Host 
@@ -66,7 +90,9 @@ function GitPushProjet($configuration) {
 function GitCommitPushProjet($configuration, $commitName) {    
     Write-Host "Starting: GitCommitPushProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
-    $path = Get-Location
+    $currentPath = Get-Location
+    $finalPath = Join-Path -Path $currentPath -ChildPath $configuration.projectBasePath    
+    Set-Location $finalPath 
     Write-Host "ProjectName            : " $configuration.projectName   
     Write-Host "Commit                 : " $commitName
     Write-Host "=============================================================================="  
@@ -76,6 +102,7 @@ function GitCommitPushProjet($configuration, $commitName) {
         GitCommitPush $commitName
         Set-Location $path  
     }   
+    Set-Location $currentPath
     Write-Host "Finishing: GitCommitPushProjet" -ForegroundColor Green
     Write-Host
     Write-Host 
@@ -85,7 +112,9 @@ function GitCommitPushProjet($configuration, $commitName) {
 function GitCleanProjet($configuration) {    
     Write-Host "Starting: GitCleanProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
-    $path = Get-Location
+    $currentPath = Get-Location
+    $finalPath = Join-Path -Path $currentPath -ChildPath $configuration.projectBasePath    
+    Set-Location $finalPath
     Write-Host "ProjectName            : " $configuration.projectName    
     Write-Host "=============================================================================="  
     foreach ($repo in $configuration.repositories) {      
@@ -94,6 +123,7 @@ function GitCleanProjet($configuration) {
         GitClean  
         Set-Location $path  
     }   
+    Set-Location $currentPath
     Write-Host "Finishing: GitCleanProjet" -ForegroundColor Green
     Write-Host
     Write-Host 
@@ -104,7 +134,9 @@ function GitCleanProjet($configuration) {
 function GitRevertProjet($configuration) {    
     Write-Host "Starting: GitRevertProjet" -ForegroundColor Green
     Write-Host "=============================================================================="    
-    $path = Get-Location
+    $currentPath = Get-Location
+    $finalPath = Join-Path -Path $currentPath -ChildPath $configuration.projectBasePath    
+    Set-Location $finalPath
     Write-Host "ProjectName            : " $configuration.projectName    
     Write-Host "=============================================================================="  
     foreach ($repo in $configuration.repositories) {      
@@ -113,6 +145,7 @@ function GitRevertProjet($configuration) {
         GitRevert  
         Set-Location $path  
     }   
+    Set-Location $currentPath
     Write-Host "Finishing: GitRevertProjet" -ForegroundColor Green
     Write-Host
     Write-Host 
