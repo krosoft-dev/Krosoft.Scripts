@@ -15,7 +15,6 @@ function EfUpdateService($projet) {
     Write-Host 
 } 
 
-
 function EfRebuildService($projet) {   
     Write-Host "Starting: EfRebuildService" -ForegroundColor Green
     Write-Host "=============================================================================="    
@@ -32,7 +31,6 @@ function EfRebuildService($projet) {
     Write-Host
     Write-Host 
 } 
-
 
 function EfAddMigrationService($projet) {   
     Write-Host "Starting: EfAddMigrationService" -ForegroundColor Green
@@ -51,23 +49,28 @@ function EfAddMigrationService($projet) {
     Write-Host 
 } 
 
-
-
-function EfUpdate( $context, $startupProject, $projet) { 
+function EfUpdate($context, $startupProject, $projet, $verbose) { 
     Write-Host "================Update Database=========================="
     Write-Host "Projet : "$projet
     Write-Host "StartupProject : "$startupProject
     Write-Host "Context : "$context
+    Write-Host "Verbose : "$verbose
     Write-Host "========================================================="
-    dotnet ef database update --context $context -s $startupProject -p $projet
+    
+    $verboseFlag = if ($verbose -eq $true) { "--verbose" } else { "" }
+    dotnet ef database update --context $context -s $startupProject -p $projet $verboseFlag
 }
-
 
 function EfUpdateFromJson($json) {   
     Write-Host "=========================================="
-    Write-Host "EfUpdateFromJson : "$json.projet $json.startupProjec
+    Write-Host "EfUpdateFromJson : "$json.projet $json.startupProject
     Write-Host "=========================================="
     
+    # Validate required parameters
+    if (-not $json.context -or -not $json.projet) {
+        throw "Required parameters 'context' and 'projet' must be specified in JSON"
+    }
+
     if ($json.startupProject) {
         $startupProject = $json.startupProject
     }
@@ -75,7 +78,13 @@ function EfUpdateFromJson($json) {
         $startupProject = $json.projet
     } 
 
-    EfUpdate $json.context $startupProject $json.projet
+    $verbose = [System.Convert]::ToBoolean($json.verbose)
+
+    if ($verbose) {
+        Write-Host "Verbose mode enabled"
+    }
+
+    EfUpdate $json.context $startupProject $json.projet $verbose
 } 
 
 function EfRemoveMigration($context, $projet) {
@@ -85,8 +94,6 @@ function EfRemoveMigration($context, $projet) {
     Write-Host "======================================================="
     dotnet ef migrations remove --context $context -s $projet -p $projet 
 }
-
-
 
 function EfAddMigration(  $context, $startupProject, $projet, $migration) {
   
@@ -99,11 +106,6 @@ function EfAddMigration(  $context, $startupProject, $projet, $migration) {
     dotnet ef migrations add $migration --context $context -s $startupProject -p $projet
 }
 
-
-
-
-
-
 function EfRebuild( $context, $projet) { 
     Write-Host "================Rebuild Database=========================="      
     Write-Host "Projet :"$projet
@@ -114,36 +116,14 @@ function EfRebuild( $context, $projet) {
 }
 
 
-
-
-
-
-
-
-
 function EfRemoveMigrationFromJson($json) {    
     Write-Host "=========================================="
     Write-Host "EfRemoveMigrationFromJson : "$json.projet
     Write-Host "=========================================="
     
     EfRemoveMigration $json.context $json.projet
-} 
-
-  
-function EfUpdateFromJson($json) {    
-    Write-Host "=========================================="
-    Write-Host "EfUpdateFromJson : "$json.projet $startupProjec
-    Write-Host "=========================================="
     
-    if ($json.startupProject) {
-        $startupProject = $json.startupProject
-    }
-    else {
-        $startupProject = $json.projet
-    } 
-
-    EfUpdate $json.context $startupProject $json.projet
-} 
+}    
  
 function EfRebuildFromJson($json) {    
     Write-Host "=========================================="
