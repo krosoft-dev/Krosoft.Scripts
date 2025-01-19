@@ -73,7 +73,9 @@ function GitPushProjet($configuration) {
     Write-Host "=============================================================================="    
     $currentPath = Get-Location
     $finalPath = Join-Path -Path $currentPath -ChildPath $configuration.projectBasePath    
-    Write-Host "ProjectName            : " $configuration.projectName   
+    Set-Location $finalPath
+    Write-Host "ProjectName            : " $configuration.projectName
+    Write-Host "Branch                 : " $branch
     Write-Host "=============================================================================="  
     foreach ($repo in $configuration.repositories) {      
         $path = Get-Location 
