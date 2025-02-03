@@ -32,6 +32,7 @@ function AzDevOpsRepositories($configuration) {
     $repositories = $response.value | ForEach-Object {
         [PSCustomObject]@{
             id            = $_.id
+            project          = $_.project.name
             name          = $_.name
             defaultBranch = $_.defaultBranch
         }
