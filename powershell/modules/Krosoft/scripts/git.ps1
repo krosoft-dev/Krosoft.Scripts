@@ -5,7 +5,7 @@ Set-Alias KGV GitVersion
 
 function GitClean {
     Write-Host -fore green "=========================================="
-    Write-Host -fore green "Clean branch of Repository"
+    Write-Host -fore green "Clean branches of repository"
     Write-Host -fore green "=========================================="
     $path = Get-Location
     Write-Host "Path : " $path
@@ -18,17 +18,18 @@ function GitClean {
 Set-Alias KGC GitClean 
 
 function GitPull($branch) {  
-    Write-Host "Starting: GitPull" -ForegroundColor Green
-    Write-Host "=============================================================================="    
+    Write-Host -fore green "=========================================="
+    Write-Host -fore green "Pull latest changes from repository"
+    Write-Host -fore green "==========================================" 
     $path = Get-Location
-    Write-Host -fore Blue "Path : " $path
-    Write-Host -fore Blue "Branch          : " $branch
-    Write-Host "=============================================================================="  
+    Write-Host -fore Blue "Path   : " $path
+    Write-Host -fore Blue "Branch : " $branch
+    Write-Host -fore green "==========================================" 
     if ($branch) { 
         git checkout $branch
     }
     git pull 
-    Write-Host "Finishing: GitPull" -ForegroundColor Green
+    Write-Host -fore green "==========================================" 
     Write-Host
     Write-Host 
 } 
@@ -49,13 +50,14 @@ function GitClone($repositoryUrl) {
 Set-Alias KGClo GitClone
 
 function GitBranches() {  
-    Write-Host "Starting: GitBranches" -ForegroundColor Green
-    Write-Host "=============================================================================="    
+    Write-Host -fore green "=========================================="
+    Write-Host -fore green "List branches of repository"
+    Write-Host -fore green "=========================================="
     $path = Get-Location
     Write-Host -fore Blue "Path : " $path
-    Write-Host "=============================================================================="  
+    Write-Host -fore green "=========================================="
     git for-each-ref --format='%(color:cyan)%(authordate:format:%d/%m/%Y %H:%M)    %(align:25,left)%(color:yellow)%(authorname)%(end) %(color:reset)%(refname:strip=3)' --sort=-authordate refs/remotes  
-    Write-Host "Finishing: GitBranches" -ForegroundColor Green
+    Write-Host -fore green "=========================================="
     Write-Host
     Write-Host 
 } 

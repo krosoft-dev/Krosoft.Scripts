@@ -1,36 +1,28 @@
 function NodeInstall() {  
-    Write-Host "Starting: NodeInstall" -ForegroundColor Green
-    Write-Host "=============================================================================="    
+    Write-Host -fore green "=========================================="
+    Write-Host -fore green "Node install..."
+    Write-Host -fore green "==========================================" 
     $path = Get-Location
     Write-Host "Path            : " $path
-    Write-Host "=============================================================================="   
+    Write-Host -fore green "==========================================" 
     npm i
-    Write-Host "Finishing: NodeInstall" -ForegroundColor Green
+    Write-Host -fore green "=========================================="
     Write-Host
     Write-Host 
 } 
 Set-Alias KNI NodeInstall
 
 function NodeOutdated() {  
-    Write-Host "Starting: NodeOutdated" -ForegroundColor Green
-    Write-Host "=============================================================================="    
+    Write-Host -fore green "==========================================" 
+    Write-Host -fore green "Node outdated..." 
+    Write-Host -fore green "==========================================" 
     $path = Get-Location
     Write-Host "Path            : " $path
-    Write-Host "=============================================================================="   
+    Write-Host -fore green "==========================================" 
     npm outdated
-    Write-Host "Finishing: NodeOutdated" -ForegroundColor Green
+    Write-Host -fore green "=========================================="
     Write-Host
     Write-Host 
 } 
 Set-Alias KNO NodeOutdated
 
-
-
-
-npm 
-
-
-
-
-
- 
