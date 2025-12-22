@@ -36,16 +36,17 @@ function GitPull($branch) {
 Set-Alias KGP GitPull
 
 function GitClone($repositoryUrl) {
-    Write-Host "Starting: GitClone" -ForegroundColor Green
-    Write-Host "=============================================================================="    
+    Write-Host -fore green "=========================================="
+    Write-Host -fore green "Clone repository"
+    Write-Host -fore green "=========================================="
     $path = Get-Location
     Write-Host "Path                     : " $path
     Write-Host "RepositoryUrl            : " $repositoryUrl
-    Write-Host "=============================================================================="  
+    Write-Host -fore green "=========================================="
     git clone $repositoryUrl
-    Write-Host "Finishing: GitClone" -ForegroundColor Green
+    Write-Host -fore green "=========================================="
     Write-Host
-    Write-Host 
+    Write-Host    
 }
 Set-Alias KGClo GitClone
 
@@ -89,9 +90,6 @@ function GitCommitPush($commitName) {
     Write-Host
     Write-Host 
 } 
-
-
-
 
 
 function GitRevert() {    
