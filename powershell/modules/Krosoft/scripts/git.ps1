@@ -8,14 +8,33 @@ function GitClean {
     Write-Host -fore green "Clean branches of repository"
     Write-Host -fore green "=========================================="
     $path = Get-Location
-    Write-Host "Path : " $path
+    Write-Host -fore Blue "Path : " $path 
     Write-Host -fore green "=========================================="
     git pull
     git fetch origin --prune
     git branch -vv | Where-Object { $_ -match '\[origin/.*: gone\]' } | ForEach-Object { git branch -D ($_.split(" ", [StringSplitOptions]'RemoveEmptyEntries')[0]) }
     Write-Host -fore green  
 }
-Set-Alias KGC GitClean 
+Set-Alias KGC GitClean
+
+function GitCleanAll {
+    Write-Host -fore green "=========================================="
+    Write-Host -fore green "Clean branches of all repositories"
+    Write-Host -fore green "=========================================="
+    $currentPath = Get-Location
+    Write-Host "Path : " $currentPath
+    Write-Host -fore green "=========================================="
+    try {
+        Get-ChildItem -Path $currentPath -Directory | Where-Object { Test-Path (Join-Path $_.FullName ".git") } | ForEach-Object {
+            Set-Location $_.FullName
+            GitClean
+        }
+    }
+    finally {
+        Set-Location $currentPath
+    }
+}
+Set-Alias KGCA GitCleanAll
 
 function GitPull($branch) {  
     Write-Host -fore green "=========================================="
