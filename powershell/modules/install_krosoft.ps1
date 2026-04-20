@@ -43,8 +43,9 @@ New-ModuleManifest -Path "$path\$module\$module.psd1" `
     -Author "Krosoft" `
     -ModuleVersion $version `
     -Description "Scripts utiles"  `
-    -RootModule "$path\$module\$module.psm1"  `
-    -FunctionsToExport '*'
+    -RootModule "$module.psm1"  `
+    -FunctionsToExport '*' `
+    -AliasesToExport '*'
 
 Write-Host -fore green "=========================================="
 Write-Host -fore green "Test du module : "$module
@@ -74,12 +75,36 @@ Find-Module -Name $module -Repository $name -Verbose
 Write-Host -fore green "=========================================="
 Write-Host -fore green "Uninstall-Module : "$module
 Write-Host -fore green "=========================================="
-Uninstall-Module -Name $module -Verbose
+Uninstall-Module -Name $module -Verbose -ErrorAction SilentlyContinue
  
 Write-Host -fore green "=========================================="
 Write-Host -fore green "Install-Module : "$module
 Write-Host -fore green "=========================================="
-Install-Module -Name $module -Repository $name -Verbose
+Install-Module -Name $module -Repository $name -Scope CurrentUser -Verbose
+
+
+Write-Host -fore green "=========================================="
+Write-Host -fore green "Setup PowerShell Profile"
+Write-Host -fore green "=========================================="
+$profileDir = Split-Path $PROFILE -Parent
+if (-not (Test-Path $profileDir)) {
+    New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+}
+$importLine = "Import-Module $module -Force"
+if (Test-Path $PROFILE) {
+    $content = Get-Content $PROFILE -Raw
+    if ($content -notmatch "Import-Module\s+$module") {
+        Add-Content -Path $PROFILE -Value "`n$importLine"
+        Write-Host -fore Blue "Added '$importLine' to profile: $PROFILE"
+    } else {
+        Write-Host -fore Blue "Profile already contains Import-Module $module"
+    }
+} else {
+    Set-Content -Path $PROFILE -Value $importLine
+    Write-Host -fore Blue "Created profile with '$importLine': $PROFILE"
+}
+
+
  
 Write-Host -fore green "=========================================="
 Write-Host -fore green "Import-Module : "$module
@@ -90,6 +115,4 @@ Write-Host -fore green "=========================================="
 Write-Host -fore green "Test : "
 Write-Host -fore green "=========================================="
 kh
-
-
 
