@@ -16,9 +16,10 @@ function Get-SccBinary() {
     return $sccPath
 }
 
-function Get-SccMdHeader($title, $path, [string[]]$lang) {
+function Get-SccMdHeader($title, $path, [string[]]$lang, $description) {
     $date = Get-Date -Format "yyyy-MM-dd HH:mm"
     $header  = "# $title`n`n"
+    if ($description) { $header += "$description`n`n" }
     $header += "> **Date** : $date  `n"
     $header += "> **Path** : $path  `n"
     if ($lang) { $header += "> **Langages** : $($lang -join ', ')  `n" }
@@ -90,7 +91,7 @@ function Get-SccRows($sccPath, $targetPath, $projet, [string[]]$lang) {
 }
 
 function SccAnalyse {
-    param($path, [switch]$table, [switch]$md, [string[]]$lang, [switch]$folders, [switch]$summary, [string]$filter)
+    param($path, [switch]$table, [switch]$md, [string[]]$lang, [switch]$folders, [switch]$summary, [string]$filter, [string]$description)
 
     Write-Host -fore Green "=========================================="
     Write-Host -fore Green "SCC : Analyse du code"
@@ -134,7 +135,7 @@ function SccAnalyse {
             Get-SccRows $sccPath $dir.FullName $dir.Name $lang
         }
         if ($md) {
-            $mdContent = Get-SccMdHeader "SCC - Synthese" $path $lang
+            $mdContent = Get-SccMdHeader "SCC - Synthese" $path $lang $description
             $mdContent += "| Projet | Langage | Lignes | Code | Commentaire | Vide | Fichiers | Complexite |`n"
             $mdContent += "|--------|---------|--------|------|-------------|------|----------|------------|`n"
             foreach ($r in $rows) {
@@ -156,7 +157,7 @@ function SccAnalyse {
             return
         }
         if ($md) {
-            $mdContent = Get-SccMdHeader "SCC - Analyse par dossier" $path $lang
+            $mdContent = Get-SccMdHeader "SCC - Analyse par dossier" $path $lang $description
             foreach ($dir in $subDirs) {
                 $json = & $sccPath --format json $dir.FullName
                 $results = $json | ConvertFrom-Json
@@ -177,7 +178,7 @@ function SccAnalyse {
             $json = & $sccPath --format json $path
             $results = $json | ConvertFrom-Json
             if ($lang) { $results = $results | Where-Object { $_.Name -in $lang } }
-            $mdContent = Get-SccMdHeader "SCC - Analyse du code" $path $lang
+            $mdContent = Get-SccMdHeader "SCC - Analyse du code" $path $lang $description
             $mdContent += ConvertTo-SccMarkdown $results $null
             $outFile = Join-Path $path "scc-report.md"
             $mdContent | Out-File -FilePath $outFile -Encoding utf8
