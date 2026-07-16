@@ -12,6 +12,22 @@ Le module est ensuite disponible dans chaque session via `Import-Module Krosoft 
 
 ---
 
+## Antigravity IDE
+
+**Alias :** `kai`  
+**Fonction :** `Invoke-AntigravityIde`  
+**Fichier :** `powershell/modules/Krosoft/scripts/antigravity.ps1`
+
+Lance l'éditeur Antigravity IDE dans le dossier courant. L'équivalent d'un `antigravity-ide .`.
+
+### Syntaxe
+
+```powershell
+kai
+```
+
+---
+
 ## KSCC — Analyse de code avec SCC
 
 **Alias :** `KSCC`  
