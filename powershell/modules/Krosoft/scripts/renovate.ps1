@@ -66,6 +66,19 @@ function Invoke-Renovate {
         return
     }
     $Path = (Resolve-Path $Path).Path
+    $isLocal = Test-Path $Path -PathType Container
+    if ($isLocal) {
+        $DryRun = $true
+    }
+
+    Write-Host -fore green "=========================================="
+    Write-Host -fore green "Renovate"
+    Write-Host -fore green "=========================================="
+    Write-Host -fore Blue "Path   : " $Path
+    Write-Host -fore Blue "Mode   : " $(if ($isLocal) { "Local (aucune PR)" } else { "Profil" })
+    Write-Host -fore Blue "DryRun : " $DryRun
+    Write-Host -fore Blue "Image  : " $RenovateImage
+    Write-Host -fore green "=========================================="
 
     $reportDir = Join-Path $env:TEMP "krosoft-renovate"
     New-Item -ItemType Directory -Force $reportDir | Out-Null
@@ -76,17 +89,20 @@ function Invoke-Renovate {
 
     $dockerArgs = @("run", "--rm", "-v", "${reportDir}:/tmp/report")
 
-    if (Test-Path $Path -PathType Container) {
+    if ($isLocal) {
         # Dossier : analyse locale, sans plateforme, aucune PR
-        Write-Host -fore Green "Renovate (local) : $Path"
+        # Renovate ne voit que les fichiers suivis par git
+        $configs = @("renovate.json", "renovate.json5", ".renovaterc", ".renovaterc.json", ".github/renovate.json", ".gitlab/renovate.json")
+        if (-not (git -C $Path ls-files -- $configs)) {
+            Write-Host -fore Red "Aucune config Renovate suivie par git dans $Path (faire un 'git add renovate.json')."
+            return
+        }
         $dockerArgs += @("-v", "${Path}:/usr/src/app", "-w", "/usr/src/app", "-e", "LOG_LEVEL=warn")
         $dockerArgs += Get-RenovateEnvArgs $null
         $dockerArgs += @($RenovateImage, "--platform=local")
-        $DryRun = $true
     }
     else {
         # Fichier : profil Renovate (config.js global)
-        Write-Host -fore Green "Renovate (profil $Path)$(if ($DryRun) { ' - dry-run' })"
         $dockerArgs += @("-v", "${Path}:/usr/src/app/config.js:ro", "-e", "LOG_LEVEL=$(if ($DryRun) { 'warn' } else { 'info' })")
         try {
             $dockerArgs += Get-RenovateEnvArgs $Path
@@ -108,8 +124,14 @@ function Invoke-Renovate {
     & docker @dockerArgs
 
     if ($DryRun -and (Test-Path $reportFile)) {
+        Write-Host -fore green "=========================================="
+        Write-Host -fore green "Mises a jour disponibles"
+        Write-Host -fore green "=========================================="
         Show-RenovateReport $reportFile
     }
+    Write-Host -fore green "=========================================="
+    Write-Host
+    Write-Host
 }
 
 Set-Alias KRENOVATE Invoke-Renovate
