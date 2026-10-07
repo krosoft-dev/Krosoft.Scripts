@@ -172,12 +172,16 @@ Lance [Renovate](https://docs.renovatebot.com/) dans Docker (image `renovate/ren
 ```powershell
 KRENOVATE <profil.js> [-DryRun]   # exécute Renovate avec un profil
 KRENOVATE [<dossier>]             # analyse un dossier local (défaut : dossier courant), aucune PR
+KRENOVATE [<dossier>] -Apply      # analyse puis applique les mises à jour dans les fichiers du dossier
 ```
 
 | Paramètre | Type     | Description |
 |-----------|----------|-------------|
 | `Path`    | `string` | Fichier profil `.js`, ou dossier à analyser en local (défaut : `.`) |
 | `-DryRun` | switch   | Aucune PR créée, affiche un tableau des mises à jour disponibles (implicite pour un dossier) |
+| `-Apply`  | switch   | Dossier uniquement : remplace les versions dans les fichiers (la plus haute version proposée, majeures comprises). Les mises à jour non localisables sont listées pour être faites à la main |
+
+Renovate ne modifie jamais les fichiers en mode local : `-Apply` s'appuie sur son rapport, donc les règles du `renovate.json` (packages ignorés, versions autorisées...) sont respectées. Aucun commit n'est fait, vérifier le résultat avec `git diff`.
 
 ### Profils
 
