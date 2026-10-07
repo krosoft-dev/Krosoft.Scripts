@@ -1,0 +1,115 @@
+$RenovateImage = "renovate/renovate:latest"
+
+function Get-RenovateEnvArgs($profilePath) {
+    $envArgs = @()
+
+    # Variables lues par le profil via process.env.XXX : transmises telles quelles au conteneur
+    if ($profilePath) {
+        $names = Select-String -Path $profilePath -Pattern "process\.env\.([A-Za-z0-9_]+)" -AllMatches |
+            ForEach-Object { $_.Matches } |
+            ForEach-Object { $_.Groups[1].Value } |
+            Sort-Object -Unique
+        foreach ($name in $names) {
+            if (-not [Environment]::GetEnvironmentVariable($name)) {
+                throw "Variable d'environnement '$name' (utilisee par le profil) non definie."
+            }
+            $envArgs += @("-e", $name)
+        }
+    }
+
+    if ($env:GITHUB_COM_TOKEN) {
+        $envArgs += @("-e", "RENOVATE_GITHUB_COM_TOKEN=$env:GITHUB_COM_TOKEN")
+    }
+    else {
+        Write-Host -fore Yellow "GITHUB_COM_TOKEN non defini : risque de rate limit GitHub et pas de changelogs."
+    }
+
+    return $envArgs
+}
+
+function Show-RenovateReport($reportFile) {
+    $report = Get-Content $reportFile -Raw | ConvertFrom-Json
+    $updates = foreach ($repository in $report.repositories.PSObject.Properties) {
+        foreach ($manager in $repository.Value.packageFiles.PSObject.Properties) {
+            foreach ($file in $manager.Value) {
+                foreach ($dep in $file.deps) {
+                    foreach ($update in $dep.updates) {
+                        [PSCustomObject]@{
+                            Repo     = $repository.Name
+                            Package  = $dep.depName
+                            Actuelle = $dep.currentValue
+                            Nouvelle = $update.newValue
+                            Type     = $update.updateType
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if ($updates) {
+        $updates | Sort-Object Repo, Type, Package -Unique | Format-Table -AutoSize
+    }
+    else {
+        Write-Host -fore Green "Aucune mise a jour disponible."
+    }
+}
+
+function Invoke-Renovate {
+    param(
+        [string]$Path = ".",
+        [switch]$DryRun
+    )
+
+    if (-not (Test-Path $Path)) {
+        Write-Host -fore Red "Chemin introuvable : $Path"
+        return
+    }
+    $Path = (Resolve-Path $Path).Path
+
+    $reportDir = Join-Path $env:TEMP "krosoft-renovate"
+    New-Item -ItemType Directory -Force $reportDir | Out-Null
+    $reportFile = Join-Path $reportDir "report.json"
+    if (Test-Path $reportFile) {
+        Remove-Item $reportFile
+    }
+
+    $dockerArgs = @("run", "--rm", "-v", "${reportDir}:/tmp/report")
+
+    if (Test-Path $Path -PathType Container) {
+        # Dossier : analyse locale, sans plateforme, aucune PR
+        Write-Host -fore Green "Renovate (local) : $Path"
+        $dockerArgs += @("-v", "${Path}:/usr/src/app", "-w", "/usr/src/app", "-e", "LOG_LEVEL=warn")
+        $dockerArgs += Get-RenovateEnvArgs $null
+        $dockerArgs += @($RenovateImage, "--platform=local")
+        $DryRun = $true
+    }
+    else {
+        # Fichier : profil Renovate (config.js global)
+        Write-Host -fore Green "Renovate (profil $Path)$(if ($DryRun) { ' - dry-run' })"
+        $dockerArgs += @("-v", "${Path}:/usr/src/app/config.js:ro", "-e", "LOG_LEVEL=$(if ($DryRun) { 'warn' } else { 'info' })")
+        try {
+            $dockerArgs += Get-RenovateEnvArgs $Path
+        }
+        catch {
+            Write-Host -fore Red $_.Exception.Message
+            return
+        }
+        $dockerArgs += $RenovateImage
+        if ($DryRun) {
+            $dockerArgs += "--dry-run=full"
+        }
+    }
+
+    if ($DryRun) {
+        $dockerArgs += @("--report-type=file", "--report-path=/tmp/report/report.json")
+    }
+
+    & docker @dockerArgs
+
+    if ($DryRun -and (Test-Path $reportFile)) {
+        Show-RenovateReport $reportFile
+    }
+}
+
+Set-Alias KRENOVATE Invoke-Renovate

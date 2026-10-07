@@ -159,6 +159,57 @@ KSCC . | ConvertFrom-Json | Where-Object { $_.Lines -gt 100 }
 
 ---
 
+## KRENOVATE — Renovate en local via Docker
+
+**Alias :** `KRENOVATE`  
+**Fonction :** `Invoke-Renovate`  
+**Fichier :** `powershell/modules/Krosoft/scripts/renovate.ps1`
+
+Lance [Renovate](https://docs.renovatebot.com/) dans Docker (image `renovate/renovate`), sans pipeline CI. Chaque repo garde son `renovate.json`, la fonction ne fait que l'exécuter.
+
+### Syntaxe
+
+```powershell
+KRENOVATE <profil.js> [-DryRun]   # exécute Renovate avec un profil
+KRENOVATE [<dossier>]             # analyse un dossier local (défaut : dossier courant), aucune PR
+```
+
+| Paramètre | Type     | Description |
+|-----------|----------|-------------|
+| `Path`    | `string` | Fichier profil `.js`, ou dossier à analyser en local (défaut : `.`) |
+| `-DryRun` | switch   | Aucune PR créée, affiche un tableau des mises à jour disponibles (implicite pour un dossier) |
+
+### Profils
+
+Un profil est un fichier de config global Renovate (`config.js`), à stocker hors de ce repo. Un profil couvre une organisation, et un seul lancement traite tous ses repos.
+
+```js
+// mon-orga.js
+module.exports = {
+  platform: 'azure',
+  endpoint: 'https://dev.azure.com/mon-orga/',
+  token: process.env.AZDO_MON_ORGA_PAT,
+
+  // Seuls les repos qui ont un renovate.json sont traités (pas de PR d'onboarding)
+  autodiscover: true,
+  onboarding: false,
+  requireConfig: 'required',
+};
+```
+
+### Secrets
+
+Aucun token dans les profils : ils sont lus via `process.env.XXX`. La fonction détecte ces variables dans le profil et les transmet au conteneur (erreur si l'une d'elles n'est pas définie).
+
+`GITHUB_COM_TOKEN` (token GitHub sans scope) est transmis s'il est défini : il évite le rate limit sur les presets `github>...` et active les changelogs dans les PR.
+
+```powershell
+[Environment]::SetEnvironmentVariable("AZDO_MON_ORGA_PAT", "<pat>", "User")
+[Environment]::SetEnvironmentVariable("GITHUB_COM_TOKEN", "<token>", "User")
+```
+
+---
+
 ## Find-Port
 
 **Fichier :** `scripts/Find-Port.ps1`
