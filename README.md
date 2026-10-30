@@ -4,8 +4,10 @@ Scripts PowerShell utilitaires exposés via le module `Krosoft`.
 
 ## Installation
 
+Depuis la racine du repo :
+
 ```powershell
-.\powershell\modules\install_krosoft.ps1
+.\tools\scripts\cli_install.ps1
 ```
 
 Le module est ensuite disponible dans chaque session via `Import-Module Krosoft -Force`.
@@ -173,6 +175,7 @@ Lance [Renovate](https://docs.renovatebot.com/) dans Docker (image `renovate/ren
 KRENOVATE <profil.js> [-DryRun]   # exécute Renovate avec un profil
 KRENOVATE [<dossier>]             # analyse un dossier local (défaut : dossier courant), aucune PR
 KRENOVATE [<dossier>] -Apply      # analyse puis applique les mises à jour dans les fichiers du dossier
+KRENOVATE [<dossier>] -Apply -Group dotnet-packages, "test-*"   # n'applique que certains groupes
 ```
 
 | Paramètre | Type     | Description |
@@ -180,6 +183,9 @@ KRENOVATE [<dossier>] -Apply      # analyse puis applique les mises à jour dans
 | `Path`    | `string` | Fichier profil `.js`, ou dossier à analyser en local (défaut : `.`) |
 | `-DryRun` | switch   | Aucune PR créée, affiche un tableau des mises à jour disponibles (implicite pour un dossier) |
 | `-Apply`  | switch   | Dossier uniquement : remplace les versions dans les fichiers (la plus haute version proposée, majeures comprises). Les mises à jour non localisables sont listées pour être faites à la main |
+| `-Group`  | `string[]` | DryRun ou dossier uniquement : limite l'affichage et `-Apply` aux groupes indiqués (jokers `*` acceptés). Un groupe = une branche/PR Renovate, nom affiché sans le préfixe `renovate/` (ex : `dotnet-packages`) |
+
+Le tableau des mises à jour est regroupé comme les PR que Renovate créerait (selon les `groupName` / `packageRules` du `renovate.json`).
 
 Renovate ne modifie jamais les fichiers en mode local : `-Apply` s'appuie sur son rapport, donc les règles du `renovate.json` (packages ignorés, versions autorisées...) sont respectées. Aucun commit n'est fait, vérifier le résultat avec `git diff`.
 
@@ -258,11 +264,11 @@ KCLEAN -Days 60 -Apply
 
 ## Find-Port
 
-**Fichier :** `scripts/Find-Port.ps1`
+**Fichier :** `tools/scripts/system_find-port.ps1`
 
 Identifie le processus qui occupe un port réseau, avec option de kill.
 
 ```powershell
-.\scripts\Find-Port.ps1 -Port 8080
-.\scripts\Find-Port.ps1 -Port 8080 -Kill
+.\tools\scripts\system_find-port.ps1 -Port 8080
+.\tools\scripts\system_find-port.ps1 -Port 8080 -Kill
 ```

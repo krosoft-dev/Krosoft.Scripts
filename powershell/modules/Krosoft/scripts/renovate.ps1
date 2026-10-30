@@ -27,15 +27,34 @@ function Get-RenovateEnvArgs($profilePath) {
     return $envArgs
 }
 
-function Show-RenovateReport($reportFile) {
+function Get-RenovateGroup($update) {
+    return $update.branchName -replace "^renovate/", ""
+}
+
+function Test-RenovateGroup($update, [string[]]$groups) {
+    if (-not $groups) {
+        return $true
+    }
+    $name = Get-RenovateGroup $update
+    foreach ($group in $groups) {
+        if ($name -like $group) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Show-RenovateReport($reportFile, [string[]]$groups) {
     $report = Get-Content $reportFile -Raw | ConvertFrom-Json
     $updates = foreach ($repository in $report.repositories.PSObject.Properties) {
         foreach ($manager in $repository.Value.packageFiles.PSObject.Properties) {
             foreach ($file in $manager.Value) {
                 foreach ($dep in $file.deps) {
-                    foreach ($update in $dep.updates) {
+                    foreach ($update in $dep.updates | Where-Object { Test-RenovateGroup $_ $groups }) {
+                        # branchName reflete les groupName du renovate.json (une branche = un groupe = une PR)
                         [PSCustomObject]@{
                             Repo     = $repository.Name
+                            Groupe   = Get-RenovateGroup $update
                             Package  = $dep.depName
                             Actuelle = $dep.currentValue
                             Nouvelle = $update.newValue
@@ -48,14 +67,16 @@ function Show-RenovateReport($reportFile) {
     }
 
     if ($updates) {
-        $updates | Sort-Object Repo, Type, Package -Unique | Format-Table -AutoSize
+        $updates |
+            Sort-Object Repo, Groupe, Package, Nouvelle -Unique |
+            Format-Table -AutoSize -GroupBy @{ Label = "Groupe"; Expression = { "$($_.Repo) / $($_.Groupe)" } } -Property Package, Actuelle, Nouvelle, Type
     }
     else {
-        Write-Host -fore Green "Aucune mise a jour disponible."
+        Write-Host -fore Green "Aucune mise a jour disponible$(if ($groups) { " pour le(s) groupe(s) : $($groups -join ', ')" })."
     }
 }
 
-function Update-RenovateFiles($reportFile, $root) {
+function Update-RenovateFiles($reportFile, $root, [string[]]$groups) {
     $report = Get-Content $reportFile -Raw | ConvertFrom-Json
     $applied = 0
     $skipped = @()
@@ -68,9 +89,9 @@ function Update-RenovateFiles($reportFile, $root) {
                 $changed = $false
 
                 foreach ($dep in $file.deps) {
-                    # Plusieurs updates possibles (minor, major...) : on prend la plus haute
+                    # Plusieurs updates possibles (minor, major...) : on prend la plus haute parmi les groupes demandes
                     $update = $dep.updates |
-                        Where-Object { $_.newValue -and $_.newValue -ne $dep.currentValue } |
+                        Where-Object { $_.newValue -and $_.newValue -ne $dep.currentValue -and (Test-RenovateGroup $_ $groups) } |
                         Sort-Object newMajor, newMinor, newPatch -Descending |
                         Select-Object -First 1
                     if (-not $update) {
@@ -120,7 +141,8 @@ function Invoke-Renovate {
     param(
         [string]$Path = ".",
         [switch]$DryRun,
-        [switch]$Apply
+        [switch]$Apply,
+        [string[]]$Group
     )
 
     if (-not (Test-Path $Path)) {
@@ -136,6 +158,10 @@ function Invoke-Renovate {
         Write-Host -fore Red "-Apply n'est disponible que sur un dossier local."
         return
     }
+    if ($Group -and -not $DryRun) {
+        Write-Host -fore Red "-Group n'est disponible qu'en DryRun ou sur un dossier local."
+        return
+    }
 
     Write-Host -fore green "=========================================="
     Write-Host -fore green "Renovate"
@@ -144,6 +170,7 @@ function Invoke-Renovate {
     Write-Host -fore Blue "Mode   : " $(if ($isLocal) { "Local (aucune PR)" } else { "Profil" })
     Write-Host -fore Blue "DryRun : " $DryRun
     Write-Host -fore Blue "Apply  : " $Apply.IsPresent
+    Write-Host -fore Blue "Group  : " $(if ($Group) { $Group -join ", " } else { "(tous)" })
     Write-Host -fore Blue "Image  : " $RenovateImage
     Write-Host -fore green "=========================================="
 
@@ -194,13 +221,13 @@ function Invoke-Renovate {
         Write-Host -fore green "=========================================="
         Write-Host -fore green "Mises a jour disponibles"
         Write-Host -fore green "=========================================="
-        Show-RenovateReport $reportFile
+        Show-RenovateReport $reportFile $Group
 
         if ($Apply) {
             Write-Host -fore green "=========================================="
             Write-Host -fore green "Application des mises a jour"
             Write-Host -fore green "=========================================="
-            Update-RenovateFiles $reportFile $Path
+            Update-RenovateFiles $reportFile $Path $Group
         }
     }
     Write-Host -fore green "=========================================="

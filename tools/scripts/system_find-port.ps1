@@ -1,6 +1,5 @@
-# Find-Port.ps1
-# Usage: .\Find-Port.ps1 -Port 8080
-# Usage: .\Find-Port.ps1 -Port 8080 -Kill
+# Usage (depuis la racine du repo) : .\tools\scripts\system_find-port.ps1 -Port 8080
+# Usage (depuis la racine du repo) : .\tools\scripts\system_find-port.ps1 -Port 8080 -Kill
 
 param(
     [Parameter(Mandatory = $true)]
