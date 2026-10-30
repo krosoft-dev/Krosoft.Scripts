@@ -94,12 +94,18 @@ function Get-DevCleanSize($path) {
     return $sum
 }
 
+function Write-DevCleanElapsed($stopwatch) {
+    $stopwatch.Stop()
+    Write-Host -fore Blue "Temps : " $stopwatch.Elapsed.ToString("hh\:mm\:ss")
+}
+
 function Invoke-DevClean {
     param(
         [int]$Days = 30,
         [switch]$Apply
     )
 
+    $stopwatch = [Diagnostics.Stopwatch]::StartNew()
     $root = (Get-Location).Path
     $cutoff = (Get-Date).AddDays(-$Days)
 
@@ -135,6 +141,7 @@ function Invoke-DevClean {
 
     if (-not $targets) {
         Write-Host -fore Green "Rien a nettoyer."
+        Write-DevCleanElapsed $stopwatch
         Write-Host -fore green "=========================================="
         Write-Host
         return
@@ -153,6 +160,7 @@ function Invoke-DevClean {
             Format-Table -AutoSize
         Write-Host -fore green "=========================================="
         Write-Host -fore Green ("{0} dossier(s), {1:N2} Go recuperables." -f $targets.Count, ($total / 1GB))
+        Write-DevCleanElapsed $stopwatch
         Write-Host -fore green "=========================================="
         Write-Host
         return
@@ -173,6 +181,7 @@ function Invoke-DevClean {
     }
     Write-Host -fore green "=========================================="
     Write-Host -fore Green ("{0:N2} Go liberes." -f ($freed / 1GB))
+    Write-DevCleanElapsed $stopwatch
     Write-Host -fore green "=========================================="
     Write-Host
 }
