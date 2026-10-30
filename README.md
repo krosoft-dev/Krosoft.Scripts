@@ -214,6 +214,48 @@ Aucun token dans les profils : ils sont lus via `process.env.XXX`. La fonction d
 
 ---
 
+## KCLEAN — Nettoyage des projets dormants
+
+**Alias :** `KCLEAN`  
+**Fonction :** `Invoke-DevClean`  
+**Fichier :** `powershell/modules/Krosoft/scripts/clean.ps1`
+
+Supprime les dossiers `node_modules`, `bin` et `obj` des projets du dossier courant (et de ses sous-dossiers) auxquels on n'a pas touché depuis un certain temps, pour récupérer de l'espace disque. Par défaut, rien n'est supprimé : la commande affiche seulement ce qui serait nettoyé.
+
+### Syntaxe
+
+```powershell
+KCLEAN [-Days <n>] [-Apply]
+```
+
+| Paramètre | Type   | Description |
+|-----------|--------|-------------|
+| `-Days`   | `int`  | Âge minimum, en jours, de la dernière modification d'un projet pour qu'il soit nettoyé (défaut : `30`) |
+| `-Apply`  | switch | Supprime réellement les dossiers (sans ce switch : simulation) |
+
+### Règles
+
+- `node_modules` est supprimé seulement s'il y a un `package.json` à côté.
+- `bin` et `obj` sont supprimés seulement s'il y a un `.csproj`, `.fsproj` ou `.vbproj` à côté.
+- Un projet est dormant si aucun de ses fichiers sources (hors `node_modules`, `bin`, `obj`, `.git`, `dist`...) n'a été modifié depuis `-Days` jours. L'activité est jugée à l'échelle du repo git : un sous-package d'un monorepo actif n'est jamais nettoyé.
+- Les dossiers de moins de 1 Mo sont ignorés.
+
+Un projet nettoyé demande un `npm install` / `dotnet restore` à sa prochaine ouverture.
+
+### Exemples
+
+```powershell
+cd C:\Dev
+
+# Simulation
+KCLEAN
+
+# Suppression des projets non modifiés depuis 60 jours
+KCLEAN -Days 60 -Apply
+```
+
+---
+
 ## Find-Port
 
 **Fichier :** `scripts/Find-Port.ps1`
